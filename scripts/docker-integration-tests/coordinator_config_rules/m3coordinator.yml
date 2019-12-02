@@ -39,25 +39,29 @@ clusters:
 
 downsample:
   rules:
-    # mappingRules:
-    #   - filter: "foo:bar"
-    #     aggregation:
-    #       - 2
-    #     storagePolicies:
-    #       - retention: 12h
-    #         resolution: 10s
-    #     drop: false
-    rollupRules:
+    mappingRules:
       - filter: "foo:bar"
-        transforms:
-          - rollup:
-              metricName: "new_metric"
-            aggregate:
-              type: Sum
+        aggregations:
+          - Sum
         storagePolicies:
           - retention: 10h
             resolution: 5s
-        name: "testRollup"
+        drop: false
+    # rollupRules:
+    #   - filter: "foo:bar"
+    #     transforms:
+    #       - rollup:
+    #           metricName: "new_metric"
+    #           aggregations:
+    #             - Sum
+    #           groupBy:
+    #             - foo
+    #         # aggregate:
+    #         #   type: Sum
+    #     storagePolicies:
+    #       - retention: 10h
+    #         resolution: 5s
+    #     name: "testRollup"
 
 
 tagOptions:

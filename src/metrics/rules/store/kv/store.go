@@ -114,6 +114,9 @@ func (s *store) WriteAll(nss *rules.Namespaces, rs rules.MutableRuleSet) error {
 	if err != nil {
 		return err
 	}
+
+	r, _ := rs.RollupRules()
+	fmt.Println("ruleset rollup rules: ", r)
 	conditions = append(conditions, ruleSetCond)
 	ops = append(ops, ruleSetOp)
 
