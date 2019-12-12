@@ -33,6 +33,7 @@ import (
 	"github.com/m3db/m3/src/cluster/shard"
 	"github.com/m3db/m3/src/cmd/services/m3query/config"
 	apihandler "github.com/m3db/m3/src/query/api/v1/handler"
+	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/handleroptions"
 	"github.com/m3db/m3/src/x/instrument"
 
 	"github.com/golang/mock/gomock"
@@ -181,10 +182,10 @@ func testPlacementReplaceHandlerSafeOk(t *testing.T, serviceName string) {
 
 	matcher := gomock.Any()
 	switch serviceName {
-	case apihandler.M3DBServiceName:
+	case handleroptions.M3DBServiceName:
 		pl = pl.SetIsSharded(true)
 		matcher = newPlacementReplaceMatcher()
-	case apihandler.M3AggregatorServiceName:
+	case handleroptions.M3AggregatorServiceName:
 		pl = pl.SetIsSharded(true).SetIsMirrored(true)
 		matcher = newPlacementReplaceMatcher()
 	default:
@@ -193,7 +194,7 @@ func testPlacementReplaceHandlerSafeOk(t *testing.T, serviceName string) {
 	instances := pl.Instances()
 	for i, inst := range instances {
 		newInst := inst.SetIsolationGroup("r1").SetZone("z1").SetWeight(1)
-		if serviceName == apihandler.M3CoordinatorServiceName {
+		if serviceName == handleroptions.M3CoordinatorServiceName {
 			newInst = newInst.SetShards(shard.NewShards([]shard.Shard{}))
 		}
 		instances[i] = newInst

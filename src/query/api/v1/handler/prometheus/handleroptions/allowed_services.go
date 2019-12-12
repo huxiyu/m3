@@ -18,28 +18,37 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package handler
+package handleroptions
 
-import (
-	"sort"
-	"testing"
+type allowedServicesSet map[string]struct{}
 
-	"github.com/stretchr/testify/assert"
-)
-
-func TestIsAllowedService(t *testing.T) {
-	assert.True(t, IsAllowedService("m3db"))
-	assert.False(t, IsAllowedService("foo"))
+func (a allowedServicesSet) String() []string {
+	s := make([]string, 0, len(a))
+	for key := range a {
+		s = append(s, key)
+	}
+	return s
 }
 
-func TestAllowedServices(t *testing.T) {
-	exp := []string{
-		"m3aggregator",
-		"m3coordinator",
-		"m3db",
+var (
+	allowedServices = allowedServicesSet{
+		M3DBServiceName:          struct{}{},
+		M3AggregatorServiceName:  struct{}{},
+		M3CoordinatorServiceName: struct{}{},
 	}
+)
 
-	svcs := AllowedServices()
-	sort.Strings(svcs)
-	assert.Equal(t, exp, svcs)
+// IsAllowedService returns whether a service name is a valid M3 service.
+func IsAllowedService(svc string) bool {
+	_, ok := allowedServices[svc]
+	return ok
+}
+
+// AllowedServices returns the list of valid M3 services.
+func AllowedServices() []string {
+	svcs := make([]string, 0, len(allowedServices))
+	for svc := range allowedServices {
+		svcs = append(svcs, svc)
+	}
+	return svcs
 }

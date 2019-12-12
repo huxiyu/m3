@@ -27,6 +27,7 @@ import (
 
 	"github.com/m3db/m3/src/query/api/v1/handler"
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus"
+	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/handleroptions"
 	"github.com/m3db/m3/src/query/api/v1/options"
 	"github.com/m3db/m3/src/query/errors"
 	"github.com/m3db/m3/src/query/models"
@@ -59,7 +60,7 @@ var (
 // TagValuesHandler represents a handler for search tags endpoint.
 type TagValuesHandler struct {
 	storage             storage.Storage
-	fetchOptionsBuilder handler.FetchOptionsBuilder
+	fetchOptionsBuilder handleroptions.FetchOptionsBuilder
 	nowFn               clock.NowFn
 	instrumentOpts      instrument.Options
 }
@@ -104,7 +105,7 @@ func (h *TagValuesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handler.AddWarningHeaders(w, result.Metadata)
+	handleroptions.AddWarningHeaders(w, result.Metadata)
 	// TODO: Support multiple result types
 	err = prometheus.RenderTagValuesResultsJSON(w, result)
 	if err != nil {

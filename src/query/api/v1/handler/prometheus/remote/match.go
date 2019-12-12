@@ -24,10 +24,10 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/m3db/m3/src/query/api/v1/options"
-
 	"github.com/m3db/m3/src/query/api/v1/handler"
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus"
+	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/handleroptions"
+	"github.com/m3db/m3/src/query/api/v1/options"
 	"github.com/m3db/m3/src/query/block"
 	"github.com/m3db/m3/src/query/models"
 	"github.com/m3db/m3/src/query/storage"
@@ -53,7 +53,7 @@ var (
 type PromSeriesMatchHandler struct {
 	storage             storage.Storage
 	tagOptions          models.TagOptions
-	fetchOptionsBuilder handler.FetchOptionsBuilder
+	fetchOptionsBuilder handleroptions.FetchOptionsBuilder
 	instrumentOpts      instrument.Options
 }
 
@@ -100,7 +100,7 @@ func (h *PromSeriesMatchHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 		meta = meta.CombineMetadata(result.Metadata)
 	}
 
-	handler.AddWarningHeaders(w, meta)
+	handleroptions.AddWarningHeaders(w, meta)
 	// TODO: Support multiple result types
 	if err := prometheus.RenderSeriesMatchResultsJSON(w, results, false); err != nil {
 		logger.Error("unable to write matched series", zap.Error(err))

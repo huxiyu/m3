@@ -57,9 +57,9 @@ type SearchHandler struct {
 // NewSearchHandler returns a new instance of handler
 func NewSearchHandler(opts options.HandlerOptions) http.Handler {
 	return &SearchHandler{
-		store:               storage,
-		fetchOptionsBuilder: fetchOptionsBuilder,
-		instrumentOpts:      instrumentOpts,
+		store:               opts.Storage(),
+		fetchOptionsBuilder: opts.FetchOptionsBuilder(),
+		instrumentOpts:      opts.InstrumentOpts(),
 	}
 }
 
