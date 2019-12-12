@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"github.com/m3db/m3/src/query/api/v1/handler"
+	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/handleroptions"
 	"github.com/m3db/m3/src/query/block"
 	"github.com/m3db/m3/src/query/models"
 	"github.com/m3db/m3/src/query/storage"
@@ -263,7 +264,7 @@ func testFind(t *testing.T, ex bool, ex2 bool, header string) {
 	}
 
 	require.Equal(t, expected, r)
-	actual := w.Header().Get(handler.LimitHeader)
+	actual := w.Header().Get(handleroptions.LimitHeader)
 	assert.Equal(t, header, actual)
 }
 
@@ -273,10 +274,10 @@ var limitTests = []struct {
 	header  string
 }{
 	{"both incomplete", false, false, fmt.Sprintf(
-		"%s,%s_%s", handler.LimitHeaderSeriesLimitApplied, "foo", "bar")},
+		"%s,%s_%s", handleroptions.LimitHeaderSeriesLimitApplied, "foo", "bar")},
 	{"with terminator incomplete", true, false, "foo_bar"},
 	{"with children incomplete", false, true,
-		handler.LimitHeaderSeriesLimitApplied},
+		handleroptions.LimitHeaderSeriesLimitApplied},
 	{"both complete", true, true, ""},
 }
 

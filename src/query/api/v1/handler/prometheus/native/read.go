@@ -28,6 +28,7 @@ import (
 	"github.com/m3db/m3/src/cmd/services/m3query/config"
 	"github.com/m3db/m3/src/query/api/v1/handler"
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus"
+	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/handleroptions"
 	"github.com/m3db/m3/src/query/api/v1/options"
 	"github.com/m3db/m3/src/query/block"
 	"github.com/m3db/m3/src/query/executor"
@@ -71,7 +72,7 @@ type PromReadHandler struct {
 	limitsCfg           *config.LimitsConfiguration
 	timeoutOps          *prometheus.TimeoutOpts
 	engine              executor.Engine
-	fetchOptionsBuilder handler.FetchOptionsBuilder
+	fetchOptionsBuilder handleroptions.FetchOptionsBuilder
 	tagOpts             models.TagOptions
 	promReadMetrics     promReadMetrics
 	instrumentOpts      instrument.Options
@@ -220,7 +221,7 @@ func (h *PromReadHandler) ServeHTTPWithEngine(
 
 	// TODO: Support multiple result types
 	w.Header().Set("Content-Type", "application/json")
-	handler.AddWarningHeaders(w, result.meta)
+	handleroptions.AddWarningHeaders(w, result.meta)
 	return result.series, params, nil
 }
 

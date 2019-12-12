@@ -27,6 +27,8 @@ import (
 	_ "net/http/pprof" // needed for pprof handler registration
 	"time"
 
+	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/handleroptions"
+
 	"github.com/m3db/m3/src/query/api/v1/options"
 
 	"github.com/m3db/m3/src/query/api/experimental/annotated"
@@ -80,7 +82,7 @@ func (h *Handler) Router() http.Handler {
 // NewHandler returns a new instance of handler with routes.
 func NewHandler(
 	handlerOptions options.HandlerOptions,
-	customHandlers []options.CustomHandler,
+	customHandlers ...options.CustomHandler,
 ) *Handler {
 	r := mux.NewRouter()
 	handlerWithMiddleware := applyMiddleware(r, opentracing.GlobalTracer())
@@ -217,21 +219,28 @@ func (h *Handler) RegisterRoutes() error {
 		return err
 	}
 
-	var placementServices []handler.ServiceNameAndDefaults
-	for _, serviceName := range h.placementServiceNames {
-		service := handler.ServiceNameAndDefaults{
+	var (
+		serviceOptionDefaults = h.options.ServiceOptionDefaults()
+		clusterClient         = h.options.ClusterClient()
+		config                = h.options.Config()
+	)
+
+	var placementServices []handleroptions.ServiceNameAndDefaults
+	for _, serviceName := range h.options.PlacementServiceNames() {
+		service := handleroptions.ServiceNameAndDefaults{
 			ServiceName: serviceName,
-			Defaults:    h.serviceOptionDefaults,
+			Defaults:    serviceOptionDefaults,
 		}
+
 		placementServices = append(placementServices, service)
 	}
 
 	debugWriter, err := xdebug.NewPlacementAndNamespaceZipWriterWithDefaultSources(
-		h.cpuProfileDuration,
-		h.clusterClient,
+		h.options.CPUProfileDuration(),
+		clusterClient,
 		placementOpts,
 		placementServices,
-		h.instrumentOpts)
+		instrumentOpts)
 	if err != nil {
 		return fmt.Errorf("unable to create debug writer: %v", err)
 	}
@@ -240,23 +249,25 @@ func (h *Handler) RegisterRoutes() error {
 	h.router.HandleFunc(xdebug.DebugURL,
 		wrapped(debugWriter.HTTPHandler()).ServeHTTP)
 
-	if h.clusterClient != nil {
-		err = database.RegisterRoutes(h.router, h.clusterClient,
-			h.config, h.embeddedDbCfg, h.serviceOptionDefaults, h.instrumentOpts)
+	if clusterClient != nil {
+		err = database.RegisterRoutes(h.router, clusterClient,
+			h.options.Config(), h.options.EmbeddedDbCfg(),
+			serviceOptionDefaults, instrumentOpts)
 		if err != nil {
 			return err
 		}
 
-		placement.RegisterRoutes(h.router, h.serviceOptionDefaults, placementOpts)
-		namespace.RegisterRoutes(h.router, h.clusterClient, h.serviceOptionDefaults, h.instrumentOpts)
-		topic.RegisterRoutes(h.router, h.clusterClient, h.config, h.instrumentOpts)
+		placement.RegisterRoutes(h.router,
+			serviceOptionDefaults, placementOpts)
+		namespace.RegisterRoutes(h.router, clusterClient, serviceOptionDefaults, instrumentOpts)
+		topic.RegisterRoutes(h.router, clusterClient, config, instrumentOpts)
 
 		// Experimental endpoints.
-		if h.config.Experimental.Enabled {
+		if config.Experimental.Enabled {
 			experimentalAnnotatedWriteHandler := annotated.NewHandler(
-				h.downsamplerAndWriter,
-				h.tagOptions,
-				h.instrumentOpts.MetricsScope().
+				h.options.DownsamplerAndWriter(),
+				h.options.TagOptions(),
+				instrumentOpts.MetricsScope().
 					Tagged(remoteSource).
 					Tagged(experimentalAPIGroup),
 			)
@@ -275,20 +286,21 @@ func (h *Handler) RegisterRoutes() error {
 
 func (h *Handler) placementOpts() (placement.HandlerOptions, error) {
 	return placement.NewHandlerOptions(
-		h.clusterClient,
-		h.config,
+		h.options.ClusterClient(),
+		h.options.Config(),
 		h.m3AggServiceOptions(),
-		h.instrumentOpts,
+		h.options.InstrumentOpts(),
 	)
 }
 
-func (h *Handler) m3AggServiceOptions() *handler.M3AggServiceOptions {
-	if h.clusters == nil {
+func (h *Handler) m3AggServiceOptions() *handleroptions.M3AggServiceOptions {
+	clusters := h.options.Clusters()
+	if clusters == nil {
 		return nil
 	}
 
 	maxResolution := time.Duration(0)
-	for _, ns := range h.clusters.ClusterNamespaces() {
+	for _, ns := range clusters.ClusterNamespaces() {
 		resolution := ns.Options().Attributes().Resolution
 		if resolution > maxResolution {
 			maxResolution = resolution
@@ -299,7 +311,7 @@ func (h *Handler) m3AggServiceOptions() *handler.M3AggServiceOptions {
 		return nil
 	}
 
-	return &handler.M3AggServiceOptions{
+	return &handleroptions.M3AggServiceOptions{
 		MaxAggregationWindowSize: maxResolution,
 	}
 }
@@ -310,7 +322,7 @@ func (h *Handler) registerHealthEndpoints() {
 		json.NewEncoder(w).Encode(struct {
 			Uptime string `json:"uptime"`
 		}{
-			Uptime: time.Since(h.createdAt).String(),
+			Uptime: time.Since(h.options.CreatedAt()).String(),
 		})
 	}).Methods(http.MethodGet)
 }

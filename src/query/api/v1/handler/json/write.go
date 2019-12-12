@@ -26,6 +26,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/m3db/m3/src/query/api/v1/options"
+
 	"github.com/m3db/m3/src/query/api/v1/handler"
 	"github.com/m3db/m3/src/query/models"
 	"github.com/m3db/m3/src/query/storage"
@@ -54,13 +56,10 @@ type WriteJSONHandler struct {
 }
 
 // NewWriteJSONHandler returns a new instance of handler.
-func NewWriteJSONHandler(
-	store storage.Storage,
-	instrumentOpts instrument.Options,
-) http.Handler {
+func NewWriteJSONHandler(opts options.HandlerOptions) http.Handler {
 	return &WriteJSONHandler{
-		store:          store,
-		instrumentOpts: instrumentOpts,
+		store:          opts.Storage(),
+		instrumentOpts: opts.InstrumentOpts(),
 	}
 }
 

@@ -26,6 +26,7 @@ import (
 	"testing"
 
 	"github.com/m3db/m3/src/query/api/v1/handler"
+	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/handleroptions"
 	"github.com/m3db/m3/src/query/block"
 	"github.com/m3db/m3/src/query/storage"
 	"github.com/m3db/m3/src/x/instrument"
@@ -50,7 +51,7 @@ var tests = []struct {
 	{
 		"non-exhaustive",
 		block.ResultMetadata{Exhaustive: false},
-		handler.LimitHeaderSeriesLimitApplied,
+		handleroptions.LimitHeaderSeriesLimitApplied,
 	},
 	{
 		"warnings",

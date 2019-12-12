@@ -34,6 +34,7 @@ import (
 	"github.com/m3db/m3/src/dbnode/client"
 	"github.com/m3db/m3/src/query/api/v1/handler"
 	m3json "github.com/m3db/m3/src/query/api/v1/handler/json"
+	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/handleroptions"
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/native"
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/remote"
 	qcost "github.com/m3db/m3/src/query/cost"
@@ -57,8 +58,8 @@ var (
 	defaultLookbackDuration   = time.Minute
 	defaultCPUProfileduration = 5 * time.Second
 	defaultPlacementServices  = []string{"m3db"}
-	svcDefaultOptions         = []handler.ServiceOptionsDefault{
-		func(o handler.ServiceOptions) handler.ServiceOptions {
+	svcDefaultOptions         = []handleroptions.ServiceOptionsDefault{
+		func(o handleroptions.ServiceOptions) handleroptions.ServiceOptions {
 			return o
 		},
 	}
@@ -150,7 +151,7 @@ func TestHandlerFetchTimeout(t *testing.T) {
 		cfg,
 		dbconfig,
 		nil,
-		handler.NewFetchOptionsBuilder(handler.FetchOptionsBuilderOptions{}),
+		handleroptions.NewFetchOptionsBuilder(handleroptions.FetchOptionsBuilderOptions{}),
 		models.QueryContextOptions{},
 		instrument.NewOptions(),
 		defaultCPUProfileduration,

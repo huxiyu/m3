@@ -26,6 +26,7 @@ import (
 
 	"github.com/m3db/m3/src/query/api/v1/handler"
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus"
+	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/handleroptions"
 	"github.com/m3db/m3/src/query/api/v1/options"
 	"github.com/m3db/m3/src/query/executor"
 	"github.com/m3db/m3/src/query/models"
@@ -54,7 +55,7 @@ var (
 // PromReadInstantHandler represents a handler for prometheus instantaneous read endpoint.
 type PromReadInstantHandler struct {
 	engine              executor.Engine
-	fetchOptionsBuilder handler.FetchOptionsBuilder
+	fetchOptionsBuilder handleroptions.FetchOptionsBuilder
 	tagOpts             models.TagOptions
 	timeoutOpts         *prometheus.TimeoutOpts
 	instrumentOpts      instrument.Options
@@ -117,6 +118,6 @@ func (h *PromReadInstantHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 
 	// TODO: Support multiple result types
 	w.Header().Set("Content-Type", "application/json")
-	handler.AddWarningHeaders(w, result.meta)
+	handleroptions.AddWarningHeaders(w, result.meta)
 	renderResultsInstantaneousJSON(w, result.series)
 }

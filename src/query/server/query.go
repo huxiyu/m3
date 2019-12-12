@@ -31,6 +31,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/m3db/m3/src/query/api/v1/options"
+
 	clusterclient "github.com/m3db/m3/src/cluster/client"
 	etcdclient "github.com/m3db/m3/src/cluster/client/etcd"
 	"github.com/m3db/m3/src/cmd/services/m3coordinator/downsample"
@@ -41,7 +43,7 @@ import (
 	"github.com/m3db/m3/src/dbnode/client"
 	"github.com/m3db/m3/src/metrics/aggregation"
 	"github.com/m3db/m3/src/metrics/policy"
-	"github.com/m3db/m3/src/query/api/v1/handler"
+	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/handleroptions"
 	"github.com/m3db/m3/src/query/api/v1/httpd"
 	m3dbcluster "github.com/m3db/m3/src/query/cluster/m3db"
 	"github.com/m3db/m3/src/query/executor"
@@ -185,7 +187,7 @@ func Run(runOpts RunOptions) {
 		clusterClient       clusterclient.Client
 		downsampler         downsample.Downsampler
 		fetchOptsBuilderCfg = cfg.Limits.PerQuery.AsFetchOptionsBuilderOptions()
-		fetchOptsBuilder    = handler.NewFetchOptionsBuilder(fetchOptsBuilderCfg)
+		fetchOptsBuilder    = handleroptions.NewFetchOptionsBuilder(fetchOptsBuilderCfg)
 		queryCtxOpts        = models.QueryContextOptions{
 			LimitMaxTimeseries: fetchOptsBuilderCfg.Limit,
 		}
@@ -284,7 +286,7 @@ func Run(runOpts RunOptions) {
 		logger.Fatal("unable to create new downsampler and writer", zap.Error(err))
 	}
 
-	var serviceOptionDefaults []handler.ServiceOptionsDefault
+	var serviceOptionDefaults []handleroptions.ServiceOptionsDefault
 	if dbCfg := runOpts.DBConfig; dbCfg != nil {
 		cluster, err := dbCfg.EnvironmentConfig.Services.SyncCluster()
 		if err != nil {
@@ -293,20 +295,22 @@ func Run(runOpts RunOptions) {
 		}
 		if svcCfg := cluster.Service; svcCfg != nil {
 			serviceOptionDefaults = append(serviceOptionDefaults,
-				handler.WithDefaultServiceEnvironment(svcCfg.Env))
+				handleroptions.WithDefaultServiceEnvironment(svcCfg.Env))
 			serviceOptionDefaults = append(serviceOptionDefaults,
-				handler.WithDefaultServiceZone(svcCfg.Zone))
+				handleroptions.WithDefaultServiceZone(svcCfg.Zone))
 		}
 	}
 
-	handler, err := httpd.NewHandler(downsamplerAndWriter, tagOptions, engine,
-		m3dbClusters, clusterClient, cfg, runOpts.DBConfig, perQueryEnforcer,
-		fetchOptsBuilder, queryCtxOpts, instrumentOptions, cpuProfileDuration,
-		[]string{handler.M3DBServiceName}, serviceOptionDefaults)
+	handlerOptions, err := options.NewHandlerOptions(downsamplerAndWriter,
+		tagOptions, engine, m3dbClusters, clusterClient, cfg, runOpts.DBConfig,
+		perQueryEnforcer, fetchOptsBuilder, queryCtxOpts, instrumentOptions,
+		cpuProfileDuration, []string{handleroptions.M3DBServiceName},
+		serviceOptionDefaults)
 	if err != nil {
-		logger.Fatal("unable to set up handlers", zap.Error(err))
+		logger.Fatal("unable to set up handler options", zap.Error(err))
 	}
 
+	handler := httpd.NewHandler(handlerOptions)
 	if err := handler.RegisterRoutes(); err != nil {
 		logger.Fatal("unable to register routes", zap.Error(err))
 	}
