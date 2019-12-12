@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/m3db/m3/src/query/api/v1/handler"
+	"github.com/m3db/m3/src/query/api/v1/options"
 	"github.com/m3db/m3/src/query/models"
 	"github.com/m3db/m3/src/query/parser"
 	"github.com/m3db/m3/src/query/parser/promql"
@@ -51,11 +52,9 @@ type promParseHandler struct {
 }
 
 // NewPromParseHandler returns a new instance of handler.
-func NewPromParseHandler(
-	instrumentOpts instrument.Options,
-) http.Handler {
+func NewPromParseHandler(opts options.HandlerOptions) http.Handler {
 	return &promParseHandler{
-		instrumentOpts: instrumentOpts,
+		instrumentOpts: opts.InstrumentOpts(),
 	}
 }
 

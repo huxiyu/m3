@@ -23,6 +23,8 @@ package native
 import (
 	"net/http"
 
+	"github.com/m3db/m3/src/query/api/v1/options"
+
 	"github.com/m3db/m3/src/query/api/v1/handler"
 	"github.com/m3db/m3/src/query/functions/scalar"
 	"github.com/m3db/m3/src/x/instrument"
@@ -46,11 +48,9 @@ type promThresholdHandler struct {
 }
 
 // NewPromThresholdHandler returns a new instance of handler.
-func NewPromThresholdHandler(
-	instrumentOpts instrument.Options,
-) http.Handler {
+func NewPromThresholdHandler(opts options.HandlerOptions) http.Handler {
 	return &promThresholdHandler{
-		instrumentOpts: instrumentOpts,
+		instrumentOpts: opts.InstrumentOpts(),
 	}
 }
 

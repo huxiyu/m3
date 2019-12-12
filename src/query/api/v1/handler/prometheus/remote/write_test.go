@@ -34,6 +34,7 @@ import (
 	"github.com/m3db/m3/src/cmd/services/m3coordinator/ingest"
 	"github.com/m3db/m3/src/metrics/policy"
 	"github.com/m3db/m3/src/query/api/v1/handler"
+	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/handleroptions"
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/remote/test"
 	"github.com/m3db/m3/src/query/models"
 	"github.com/m3db/m3/src/query/storage"
@@ -103,7 +104,7 @@ func TestPromWriteError(t *testing.T) {
 		Return(batchErr)
 
 	handler, err := NewPromWriteHandler(mockDownsamplerAndWriter,
-		models.NewTagOptions(), PromWriteHandlerForwardingOptions{},
+		models.NewTagOptions(), handleroptions.PromWriteHandlerForwardingOptions{},
 		time.Now, instrument.NewOptions())
 	require.NoError(t, err)
 
@@ -135,7 +136,7 @@ func TestWriteErrorMetricCount(t *testing.T) {
 		SetMetricsScope(scope)
 
 	handler, err := NewPromWriteHandler(mockDownsamplerAndWriter,
-		models.NewTagOptions(), PromWriteHandlerForwardingOptions{},
+		models.NewTagOptions(), handleroptions.PromWriteHandlerForwardingOptions{},
 		time.Now, iopts)
 	require.NoError(t, err)
 
@@ -162,7 +163,7 @@ func TestWriteDatapointDelayMetric(t *testing.T) {
 		map[string]string{"test": "delay-metric-test"})
 
 	handler, err := NewPromWriteHandler(mockDownsamplerAndWriter,
-		models.NewTagOptions(), PromWriteHandlerForwardingOptions{},
+		models.NewTagOptions(), handleroptions.PromWriteHandlerForwardingOptions{},
 		time.Now, instrument.NewOptions().SetMetricsScope(scope))
 	require.NoError(t, err)
 
@@ -224,7 +225,7 @@ func TestPromWriteUnaggregatedMetricsWithHeader(t *testing.T) {
 		WriteBatch(gomock.Any(), gomock.Any(), expectedIngestWriteOptions)
 
 	writeHandler, err := NewPromWriteHandler(mockDownsamplerAndWriter,
-		models.NewTagOptions(), PromWriteHandlerForwardingOptions{},
+		models.NewTagOptions(), handleroptions.PromWriteHandlerForwardingOptions{},
 		time.Now, instrument.NewOptions())
 	require.NoError(t, err)
 
@@ -259,7 +260,7 @@ func TestPromWriteAggregatedMetricsWithHeader(t *testing.T) {
 		WriteBatch(gomock.Any(), gomock.Any(), expectedIngestWriteOptions)
 
 	writeHandler, err := NewPromWriteHandler(mockDownsamplerAndWriter,
-		models.NewTagOptions(), PromWriteHandlerForwardingOptions{},
+		models.NewTagOptions(), handleroptions.PromWriteHandlerForwardingOptions{},
 		time.Now, instrument.NewOptions())
 	require.NoError(t, err)
 

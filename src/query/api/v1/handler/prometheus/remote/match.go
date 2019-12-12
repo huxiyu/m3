@@ -24,6 +24,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/m3db/m3/src/query/api/v1/options"
+
 	"github.com/m3db/m3/src/query/api/v1/handler"
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus"
 	"github.com/m3db/m3/src/query/block"
@@ -56,17 +58,12 @@ type PromSeriesMatchHandler struct {
 }
 
 // NewPromSeriesMatchHandler returns a new instance of handler.
-func NewPromSeriesMatchHandler(
-	storage storage.Storage,
-	tagOptions models.TagOptions,
-	fetchOptionsBuilder handler.FetchOptionsBuilder,
-	instrumentOpts instrument.Options,
-) http.Handler {
+func NewPromSeriesMatchHandler(opts options.HandlerOptions) http.Handler {
 	return &PromSeriesMatchHandler{
-		tagOptions:          tagOptions,
-		storage:             storage,
-		fetchOptionsBuilder: fetchOptionsBuilder,
-		instrumentOpts:      instrumentOpts,
+		tagOptions:          opts.TagOptions(),
+		storage:             opts.Storage(),
+		fetchOptionsBuilder: opts.FetchOptionsBuilder(),
+		instrumentOpts:      opts.InstrumentOpts(),
 	}
 }
 

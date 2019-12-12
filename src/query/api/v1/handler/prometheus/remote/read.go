@@ -29,6 +29,7 @@ import (
 
 	"github.com/m3db/m3/src/query/api/v1/handler"
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus"
+	"github.com/m3db/m3/src/query/api/v1/options"
 	"github.com/m3db/m3/src/query/block"
 	"github.com/m3db/m3/src/query/executor"
 	"github.com/m3db/m3/src/query/generated/proto/prompb"
@@ -64,22 +65,16 @@ type PromReadHandler struct {
 }
 
 // NewPromReadHandler returns a new instance of handler.
-func NewPromReadHandler(
-	engine executor.Engine,
-	fetchOptionsBuilder handler.FetchOptionsBuilder,
-	timeoutOpts *prometheus.TimeoutOpts,
-	keepEmpty bool,
-	instrumentOpts instrument.Options,
-) http.Handler {
-	taggedScope := instrumentOpts.MetricsScope().
+func NewPromReadHandler(opts options.HandlerOptions) http.Handler {
+	taggedScope := opts.InstrumentOpts().MetricsScope().
 		Tagged(map[string]string{"handler": "remote-read"})
 	return &PromReadHandler{
-		engine:              engine,
+		engine:              opts.Engine(),
 		promReadMetrics:     newPromReadMetrics(taggedScope),
-		timeoutOpts:         timeoutOpts,
-		fetchOptionsBuilder: fetchOptionsBuilder,
-		keepEmpty:           keepEmpty,
-		instrumentOpts:      instrumentOpts,
+		timeoutOpts:         opts.TimeoutOpts(),
+		fetchOptionsBuilder: opts.FetchOptionsBuilder(),
+		keepEmpty:           opts.Config().ResultOptions.KeepNans,
+		instrumentOpts:      opts.InstrumentOpts(),
 	}
 }
 

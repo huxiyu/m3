@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package handler
+package handleroptions
 
 import (
 	"net/http"
@@ -40,33 +40,8 @@ const (
 	// DeprecatedHeader is the M3 deprecated header.
 	DeprecatedHeader = "M3-Deprecated"
 
-	// LimitMaxSeriesHeader is the M3 limit timeseries header that limits
-	// the number of time series returned by each storage node.
-	LimitMaxSeriesHeader = "M3-Limit-Max-Series"
-
-	// MetricsTypeHeader sets the write or read metrics type to restrict
-	// metrics to.
-	// Valid values are "unaggregated" or "aggregated".
-	MetricsTypeHeader = "M3-Metrics-Type"
-
-	// MetricsStoragePolicyHeader specifies the resolution and retention of
-	// metrics being written or read.
-	// In the form of a storage policy string, e.g. "1m:14d".
-	// Only required if the metrics type header does not specify unaggregated
-	// metrics type.
-	MetricsStoragePolicyHeader = "M3-Storage-Policy"
-
-	// RestrictByTagsJSONHeader provides tag options to enforces on queries,
-	// in JSON format. See `handler.stringTagOptions` for definitions.`
-	RestrictByTagsJSONHeader = "M3-Restrict-By-Tags-JSON"
-
 	// UnaggregatedStoragePolicy specifies the unaggregated storage policy.
 	UnaggregatedStoragePolicy = "unaggregated"
-
-	// DefaultServiceEnvironment is the default service ID environment.
-	DefaultServiceEnvironment = "default_env"
-	// DefaultServiceZone is the default service ID zone.
-	DefaultServiceZone = "embedded"
 
 	// HeaderClusterEnvironmentName is the header used to specify the environment
 	// name.

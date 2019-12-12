@@ -35,6 +35,8 @@ import (
 	"github.com/m3db/m3/src/metrics/policy"
 	"github.com/m3db/m3/src/query/api/v1/handler"
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus"
+	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/handleroptions"
+	"github.com/m3db/m3/src/query/api/v1/options"
 	"github.com/m3db/m3/src/query/generated/proto/prompb"
 	"github.com/m3db/m3/src/query/models"
 	"github.com/m3db/m3/src/query/storage"
@@ -77,7 +79,7 @@ var (
 type PromWriteHandler struct {
 	downsamplerAndWriter   ingest.DownsamplerAndWriter
 	tagOptions             models.TagOptions
-	forwarding             PromWriteHandlerForwardingOptions
+	forwarding             handleroptions.PromWriteHandlerForwardingOptions
 	forwardTimeout         time.Duration
 	forwardHTTPClient      *http.Client
 	forwardingBoundWorkers xsync.WorkerPool
@@ -87,41 +89,29 @@ type PromWriteHandler struct {
 	metrics                promWriteMetrics
 }
 
-// PromWriteHandlerForwardingOptions is the forwarding options for prometheus write handler.
-type PromWriteHandlerForwardingOptions struct {
-	// MaxConcurrency is the max parallel forwarding and if zero will be unlimited.
-	MaxConcurrency int                                    `yaml:"maxConcurrency"`
-	Timeout        time.Duration                          `yaml:"timeout"`
-	Targets        []PromWriteHandlerForwardTargetOptions `yaml:"targets"`
-}
-
-// PromWriteHandlerForwardTargetOptions is a prometheus write handler forwarder target.
-type PromWriteHandlerForwardTargetOptions struct {
-	// URL of the target to send to.
-	URL string `yaml:"url"`
-	// Method defaults to POST if not set.
-	Method string `yaml:"method"`
-}
-
 // NewPromWriteHandler returns a new instance of handler.
-func NewPromWriteHandler(
-	downsamplerAndWriter ingest.DownsamplerAndWriter,
-	tagOptions models.TagOptions,
-	forwarding PromWriteHandlerForwardingOptions,
-	nowFn clock.NowFn,
-	instrumentOpts instrument.Options,
-) (http.Handler, error) {
+func NewPromWriteHandler(options options.HandlerOptions) (http.Handler, error) {
+	var (
+		downsamplerAndWriter = options.DownsamplerAndWriter()
+		tagOptions           = options.TagOptions()
+		nowFn                = options.NowFn()
+		forwarding           = options.Config().WriteForwarding.PromRemoteWrite
+		instrumentOpts       = options.InstrumentOpts()
+	)
+
 	if downsamplerAndWriter == nil {
 		return nil, errNoDownsamplerAndWriter
 	}
+
 	if tagOptions == nil {
 		return nil, errNoTagOptions
 	}
+
 	if nowFn == nil {
 		return nil, errNoNowFn
 	}
 
-	metrics, err := newPromWriteMetrics(instrumentOpts.MetricsScope().
+	metrics, err := newPromWriteMetrics(options.InstrumentOpts().MetricsScope().
 		Tagged(map[string]string{"handler": "remote-write"}),
 	)
 	if err != nil {
@@ -419,7 +409,7 @@ func (h *PromWriteHandler) write(
 func (h *PromWriteHandler) forward(
 	ctx context.Context,
 	request prometheus.ParsePromCompressedRequestResult,
-	target PromWriteHandlerForwardTargetOptions,
+	target handleroptions.PromWriteHandlerForwardTargetOptions,
 ) error {
 	method := target.Method
 	if method == "" {

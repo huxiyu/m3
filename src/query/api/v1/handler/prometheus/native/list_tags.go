@@ -27,6 +27,7 @@ import (
 
 	"github.com/m3db/m3/src/query/api/v1/handler"
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus"
+	"github.com/m3db/m3/src/query/api/v1/options"
 	"github.com/m3db/m3/src/query/models"
 	"github.com/m3db/m3/src/query/storage"
 	"github.com/m3db/m3/src/query/util/logging"
@@ -56,17 +57,12 @@ type ListTagsHandler struct {
 }
 
 // NewListTagsHandler returns a new instance of handler.
-func NewListTagsHandler(
-	storage storage.Storage,
-	fetchOptionsBuilder handler.FetchOptionsBuilder,
-	nowFn clock.NowFn,
-	instrumentOpts instrument.Options,
-) http.Handler {
+func NewListTagsHandler(opts options.HandlerOptions) http.Handler {
 	return &ListTagsHandler{
-		storage:             storage,
-		fetchOptionsBuilder: fetchOptionsBuilder,
-		nowFn:               nowFn,
-		instrumentOpts:      instrumentOpts,
+		storage:             opts.Storage(),
+		fetchOptionsBuilder: opts.FetchOptionsBuilder(),
+		nowFn:               opts.NowFn(),
+		instrumentOpts:      opts.InstrumentOpts(),
 	}
 }
 

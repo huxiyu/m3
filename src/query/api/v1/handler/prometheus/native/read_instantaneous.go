@@ -26,6 +26,7 @@ import (
 
 	"github.com/m3db/m3/src/query/api/v1/handler"
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus"
+	"github.com/m3db/m3/src/query/api/v1/options"
 	"github.com/m3db/m3/src/query/executor"
 	"github.com/m3db/m3/src/query/models"
 	"github.com/m3db/m3/src/query/util/logging"
@@ -61,18 +62,13 @@ type PromReadInstantHandler struct {
 
 // NewPromReadInstantHandler returns a new instance of handler.
 func NewPromReadInstantHandler(
-	engine executor.Engine,
-	fetchOptionsBuilder handler.FetchOptionsBuilder,
-	tagOpts models.TagOptions,
-	timeoutOpts *prometheus.TimeoutOpts,
-	instrumentOpts instrument.Options,
-) *PromReadInstantHandler {
+	opts options.HandlerOptions) *PromReadInstantHandler {
 	return &PromReadInstantHandler{
-		engine:              engine,
-		fetchOptionsBuilder: fetchOptionsBuilder,
-		tagOpts:             tagOpts,
-		timeoutOpts:         timeoutOpts,
-		instrumentOpts:      instrumentOpts,
+		engine:              opts.Engine(),
+		fetchOptionsBuilder: opts.FetchOptionsBuilder(),
+		tagOpts:             opts.TagOptions(),
+		timeoutOpts:         opts.TimeoutOpts(),
+		instrumentOpts:      opts.InstrumentOpts(),
 	}
 }
 

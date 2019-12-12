@@ -27,6 +27,7 @@ import (
 
 	"github.com/m3db/m3/src/query/api/v1/handler"
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus"
+	"github.com/m3db/m3/src/query/api/v1/options"
 	"github.com/m3db/m3/src/query/errors"
 	"github.com/m3db/m3/src/query/models"
 	"github.com/m3db/m3/src/query/storage"
@@ -69,17 +70,12 @@ type TagValuesResponse struct {
 }
 
 // NewTagValuesHandler returns a new instance of handler.
-func NewTagValuesHandler(
-	storage storage.Storage,
-	fetchOptionsBuilder handler.FetchOptionsBuilder,
-	nowFn clock.NowFn,
-	instrumentOpts instrument.Options,
-) http.Handler {
+func NewTagValuesHandler(options options.HandlerOptions) http.Handler {
 	return &TagValuesHandler{
-		storage:             storage,
-		fetchOptionsBuilder: fetchOptionsBuilder,
-		nowFn:               nowFn,
-		instrumentOpts:      instrumentOpts,
+		storage:             options.Storage(),
+		fetchOptionsBuilder: options.FetchOptionsBuilder(),
+		nowFn:               options.NowFn(),
+		instrumentOpts:      options.InstrumentOpts(),
 	}
 }
 

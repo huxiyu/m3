@@ -24,6 +24,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/m3db/m3/src/query/api/v1/options"
+
 	"github.com/m3db/m3/src/query/api/v1/handler"
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus"
 	"github.com/m3db/m3/src/query/storage"
@@ -50,15 +52,11 @@ type CompleteTagsHandler struct {
 }
 
 // NewCompleteTagsHandler returns a new instance of handler.
-func NewCompleteTagsHandler(
-	storage storage.Storage,
-	fetchOptionsBuilder handler.FetchOptionsBuilder,
-	instrumentOpts instrument.Options,
-) http.Handler {
+func NewCompleteTagsHandler(opts options.HandlerOptions) http.Handler {
 	return &CompleteTagsHandler{
-		storage:             storage,
-		fetchOptionsBuilder: fetchOptionsBuilder,
-		instrumentOpts:      instrumentOpts,
+		storage:             opts.Storage(),
+		fetchOptionsBuilder: opts.FetchOptionsBuilder(),
+		instrumentOpts:      opts.InstrumentOpts(),
 	}
 }
 
