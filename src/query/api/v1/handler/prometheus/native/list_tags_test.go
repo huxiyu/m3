@@ -28,11 +28,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/m3db/m3/src/query/api/v1/handler"
+	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/handleroptions"
+	"github.com/m3db/m3/src/query/api/v1/options"
 	"github.com/m3db/m3/src/query/block"
 	"github.com/m3db/m3/src/query/models"
 	"github.com/m3db/m3/src/query/storage"
-	"github.com/m3db/m3/src/x/instrument"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -108,9 +108,12 @@ func testListTags(t *testing.T, meta block.ResultMetadata, header string) {
 		return now
 	}
 
-	h := NewListTagsHandler(store,
-		handler.NewFetchOptionsBuilder(handler.FetchOptionsBuilderOptions{}),
-		nowFn, instrument.NewOptions())
+	fb := handleroptions.
+		NewFetchOptionsBuilder(handleroptions.FetchOptionsBuilderOptions{})
+	opts := options.EmptyHandlerOptions().
+		SetStorage(store).
+		SetFetchOptionsBuilder(fb)
+	h := NewCompleteTagsHandler(opts)
 	for _, method := range []string{"GET", "POST"} {
 		matcher := &listTagsMatcher{now: now}
 		store.EXPECT().CompleteTags(gomock.Any(), matcher, gomock.Any()).
@@ -129,7 +132,7 @@ func testListTags(t *testing.T, meta block.ResultMetadata, header string) {
 		ex := `{"status":"success","data":["bar","baz","foo"]}`
 		require.Equal(t, ex, string(r))
 
-		actual := w.Header().Get(handler.LimitHeader)
+		actual := w.Header().Get(handleroptions.LimitHeader)
 		assert.Equal(t, header, actual)
 	}
 }
@@ -145,9 +148,12 @@ func TestListErrorTags(t *testing.T) {
 		return now
 	}
 
-	handler := NewListTagsHandler(store,
-		handler.NewFetchOptionsBuilder(handler.FetchOptionsBuilderOptions{}),
-		nowFn, instrument.NewOptions())
+	fb := handleroptions.
+		NewFetchOptionsBuilder(handleroptions.FetchOptionsBuilderOptions{})
+	opts := options.EmptyHandlerOptions().
+		SetStorage(store).
+		SetFetchOptionsBuilder(fb)
+	handler := NewCompleteTagsHandler(opts)
 	for _, method := range []string{"GET", "POST"} {
 		matcher := &listTagsMatcher{now: now}
 		store.EXPECT().CompleteTags(gomock.Any(), matcher, gomock.Any()).

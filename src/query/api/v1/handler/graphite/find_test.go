@@ -31,12 +31,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/m3db/m3/src/query/api/v1/handler"
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/handleroptions"
+	"github.com/m3db/m3/src/query/api/v1/options"
 	"github.com/m3db/m3/src/query/block"
 	"github.com/m3db/m3/src/query/models"
 	"github.com/m3db/m3/src/query/storage"
-	"github.com/m3db/m3/src/x/instrument"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -225,9 +224,13 @@ func testFind(t *testing.T, ex bool, ex2 bool, header string) {
 
 	// setup storage and handler
 	store := setupStorage(ctrl, ex, ex2)
-	h := NewFindHandler(store,
-		handler.NewFetchOptionsBuilder(handler.FetchOptionsBuilderOptions{}),
-		instrument.NewOptions())
+
+	builder := handleroptions.
+		NewFetchOptionsBuilder(handleroptions.FetchOptionsBuilderOptions{})
+	opts := options.EmptyHandlerOptions().
+		SetFetchOptionsBuilder(builder).
+		SetStorage(store)
+	h := NewFindHandler(opts)
 
 	// execute the query
 	w := &writer{}

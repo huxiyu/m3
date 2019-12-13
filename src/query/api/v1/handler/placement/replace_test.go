@@ -32,7 +32,6 @@ import (
 	"github.com/m3db/m3/src/cluster/placement"
 	"github.com/m3db/m3/src/cluster/shard"
 	"github.com/m3db/m3/src/cmd/services/m3query/config"
-	apihandler "github.com/m3db/m3/src/query/api/v1/handler"
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/handleroptions"
 	"github.com/m3db/m3/src/x/instrument"
 
@@ -83,7 +82,7 @@ func testPlacementReplaceHandlerForce(t *testing.T, serviceName string) {
 	w := httptest.NewRecorder()
 	req := newReplaceRequest(`{"force": true, "leavingInstanceIDs": []}`)
 
-	svcDefaults := apihandler.ServiceNameAndDefaults{
+	svcDefaults := handleroptions.ServiceNameAndDefaults{
 		ServiceName: serviceName,
 	}
 
@@ -118,22 +117,22 @@ func testPlacementReplaceHandlerSafeErr(t *testing.T, serviceName string) {
 	w := httptest.NewRecorder()
 	req := newReplaceRequest("{}")
 
-	svcDefaults := apihandler.ServiceNameAndDefaults{
+	svcDefaults := handleroptions.ServiceNameAndDefaults{
 		ServiceName: serviceName,
 	}
 
 	mockPlacementService.EXPECT().Placement().Return(newInitPlacement(), nil)
-	if serviceName == apihandler.M3CoordinatorServiceName {
+	if serviceName == handleroptions.M3CoordinatorServiceName {
 		mockPlacementService.EXPECT().CheckAndSet(gomock.Any(), 0).
 			Return(newInitPlacement().SetVersion(1), nil)
 	}
-	handler.ServeHTTP(svcDefaults, w, req)
 
+	handler.ServeHTTP(svcDefaults, w, req)
 	resp := w.Result()
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	switch serviceName {
-	case apihandler.M3CoordinatorServiceName:
+	case handleroptions.M3CoordinatorServiceName:
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 	default:
 		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
@@ -199,8 +198,8 @@ func testPlacementReplaceHandlerSafeOk(t *testing.T, serviceName string) {
 		}
 		instances[i] = newInst
 	}
-	pl = pl.SetInstances(instances).SetVersion(1)
 
+	pl = pl.SetInstances(instances).SetVersion(1)
 	w := httptest.NewRecorder()
 	req := newReplaceRequest(`
 	{
@@ -247,7 +246,7 @@ func testPlacementReplaceHandlerSafeOk(t *testing.T, serviceName string) {
 		SetInstances(instances).
 		SetVersion(2)
 
-	svcDefaults := apihandler.ServiceNameAndDefaults{
+	svcDefaults := handleroptions.ServiceNameAndDefaults{
 		ServiceName: serviceName,
 	}
 
@@ -258,13 +257,13 @@ func testPlacementReplaceHandlerSafeOk(t *testing.T, serviceName string) {
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	switch serviceName {
-	case apihandler.M3CoordinatorServiceName:
+	case handleroptions.M3CoordinatorServiceName:
 		exp := `{"placement":{"instances":{"B":{"id":"B","isolationGroup":"r1","zone":"z1","weight":1,"endpoint":"","shards":[],"shardSetId":0,"hostname":"","port":0},"C":{"id":"C","isolationGroup":"r1","zone":"z1","weight":1,"endpoint":"","shards":[],"shardSetId":0,"hostname":"","port":0}},"replicaFactor":0,"numShards":0,"isSharded":false,"cutoverTime":"0","isMirrored":false,"maxShardSetId":0},"version":2}`
 		assert.Equal(t, exp, string(body))
-	case apihandler.M3DBServiceName:
+	case handleroptions.M3DBServiceName:
 		exp := `{"placement":{"instances":{"A":{"id":"A","isolationGroup":"r1","zone":"z1","weight":1,"endpoint":"","shards":[{"id":1,"state":"LEAVING","sourceId":"","cutoverNanos":"0","cutoffNanos":"0"}],"shardSetId":0,"hostname":"","port":0},"B":{"id":"B","isolationGroup":"r1","zone":"z1","weight":1,"endpoint":"","shards":[{"id":1,"state":"AVAILABLE","sourceId":"","cutoverNanos":"0","cutoffNanos":"0"}],"shardSetId":0,"hostname":"","port":0},"C":{"id":"C","isolationGroup":"r1","zone":"z1","weight":1,"endpoint":"","shards":[{"id":1,"state":"INITIALIZING","sourceId":"A","cutoverNanos":"0","cutoffNanos":"0"}],"shardSetId":0,"hostname":"","port":0}},"replicaFactor":0,"numShards":0,"isSharded":true,"cutoverTime":"0","isMirrored":false,"maxShardSetId":0},"version":2}`
 		assert.Equal(t, exp, string(body))
-	case apihandler.M3AggregatorServiceName:
+	case handleroptions.M3AggregatorServiceName:
 		exp := `{"placement":{"instances":{"A":{"id":"A","isolationGroup":"r1","zone":"z1","weight":1,"endpoint":"","shards":[{"id":1,"state":"LEAVING","sourceId":"","cutoverNanos":"0","cutoffNanos":"0"}],"shardSetId":0,"hostname":"","port":0},"B":{"id":"B","isolationGroup":"r1","zone":"z1","weight":1,"endpoint":"","shards":[{"id":1,"state":"AVAILABLE","sourceId":"","cutoverNanos":"0","cutoffNanos":"0"}],"shardSetId":0,"hostname":"","port":0},"C":{"id":"C","isolationGroup":"r1","zone":"z1","weight":1,"endpoint":"","shards":[{"id":1,"state":"INITIALIZING","sourceId":"A","cutoverNanos":"0","cutoffNanos":"0"}],"shardSetId":0,"hostname":"","port":0}},"replicaFactor":0,"numShards":0,"isSharded":true,"cutoverTime":"0","isMirrored":true,"maxShardSetId":0},"version":2}`
 		assert.Equal(t, exp, string(body))
 	default:

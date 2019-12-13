@@ -163,6 +163,14 @@ type handlerOptions struct {
 	nowFn                 clock.NowFn
 }
 
+// EmptyHandlerOptions returns  default handler options.
+func EmptyHandlerOptions() HandlerOptions {
+	return &handlerOptions{
+		instrumentOpts: instrument.NewOptions(),
+		nowFn:          time.Now,
+	}
+}
+
 // NewHandlerOptions builds a handler options.
 func NewHandlerOptions(
 	downsamplerAndWriter ingest.DownsamplerAndWriter,

@@ -74,7 +74,7 @@ type WriteQuery struct {
 }
 
 func (h *WriteJSONHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	req, rErr := h.parseRequest(r)
+	req, rErr := parseRequest(r)
 	if rErr != nil {
 		xhttp.Error(w, rErr.Inner(), rErr.Code())
 		return
@@ -125,7 +125,7 @@ func newStorageWriteQuery(req *WriteQuery) (*storage.WriteQuery, error) {
 	}, nil
 }
 
-func (h *WriteJSONHandler) parseRequest(r *http.Request) (*WriteQuery, *xhttp.ParseError) {
+func parseRequest(r *http.Request) (*WriteQuery, *xhttp.ParseError) {
 	body := r.Body
 	if r.Body == nil {
 		err := fmt.Errorf("empty request body")

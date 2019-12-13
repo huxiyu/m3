@@ -27,7 +27,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/m3db/m3/src/x/instrument"
+	"github.com/m3db/m3/src/query/api/v1/options"
 	xtest "github.com/m3db/m3/src/x/test"
 
 	"github.com/stretchr/testify/require"
@@ -168,7 +168,7 @@ var thresholdTests = []struct {
 
 func TestParseThreshold(t *testing.T) {
 	for i, tt := range thresholdTests {
-		h := NewPromThresholdHandler(instrument.NewOptions())
+		h := NewPromThresholdHandler(options.EmptyHandlerOptions())
 		query := fmt.Sprintf("/threshold?query=%s", url.QueryEscape(tt.query))
 
 		req := httptest.NewRequest("GET", query, nil)
