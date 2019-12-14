@@ -70,7 +70,6 @@ import (
 	"github.com/m3db/m3/src/dbnode/x/xpool"
 	"github.com/m3db/m3/src/m3ninx/postings"
 	"github.com/m3db/m3/src/m3ninx/postings/roaring"
-	"github.com/m3db/m3/src/query/api/v1/handler"
 	"github.com/m3db/m3/src/query/api/v1/handler/placement"
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/handleroptions"
 	xconfig "github.com/m3db/m3/src/x/config"
@@ -621,8 +620,8 @@ func Run(runOpts RunOptions) {
 						{
 							ServiceName: handleroptions.M3DBServiceName,
 							Defaults: []handleroptions.ServiceOptionsDefault{
-								handler.WithDefaultServiceEnvironment(envCfg.Service.Env),
-								handler.WithDefaultServiceZone(envCfg.Service.Zone),
+								handleroptions.WithDefaultServiceEnvironment(envCfg.Service.Env),
+								handleroptions.WithDefaultServiceZone(envCfg.Service.Zone),
 							},
 						},
 					},
