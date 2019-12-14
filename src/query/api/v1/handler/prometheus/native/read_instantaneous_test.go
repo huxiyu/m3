@@ -31,7 +31,6 @@ import (
 	"time"
 
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/handleroptions"
-
 	"github.com/m3db/m3/src/query/block"
 	"github.com/m3db/m3/src/query/models"
 	"github.com/m3db/m3/src/query/test"

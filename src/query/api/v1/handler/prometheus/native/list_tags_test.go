@@ -24,6 +24,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -112,8 +113,9 @@ func testListTags(t *testing.T, meta block.ResultMetadata, header string) {
 		NewFetchOptionsBuilder(handleroptions.FetchOptionsBuilderOptions{})
 	opts := options.EmptyHandlerOptions().
 		SetStorage(store).
-		SetFetchOptionsBuilder(fb)
-	h := NewCompleteTagsHandler(opts)
+		SetFetchOptionsBuilder(fb).
+		SetNowFn(nowFn)
+	h := NewListTagsHandler(opts)
 	for _, method := range []string{"GET", "POST"} {
 		matcher := &listTagsMatcher{now: now}
 		store.EXPECT().CompleteTags(gomock.Any(), matcher, gomock.Any()).
@@ -123,6 +125,9 @@ func testListTags(t *testing.T, meta block.ResultMetadata, header string) {
 		w := httptest.NewRecorder()
 
 		h.ServeHTTP(w, req)
+
+		require.Equal(t, http.StatusOK, w.Result().StatusCode)
+
 		body := w.Result().Body
 		defer body.Close()
 
@@ -152,8 +157,9 @@ func TestListErrorTags(t *testing.T) {
 		NewFetchOptionsBuilder(handleroptions.FetchOptionsBuilderOptions{})
 	opts := options.EmptyHandlerOptions().
 		SetStorage(store).
-		SetFetchOptionsBuilder(fb)
-	handler := NewCompleteTagsHandler(opts)
+		SetFetchOptionsBuilder(fb).
+		SetNowFn(nowFn)
+	handler := NewListTagsHandler(opts)
 	for _, method := range []string{"GET", "POST"} {
 		matcher := &listTagsMatcher{now: now}
 		store.EXPECT().CompleteTags(gomock.Any(), matcher, gomock.Any()).

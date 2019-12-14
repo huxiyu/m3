@@ -26,9 +26,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/m3db/m3/src/query/api/v1/options"
-
 	"github.com/m3db/m3/src/query/api/v1/handler"
+	"github.com/m3db/m3/src/query/api/v1/options"
 	"github.com/m3db/m3/src/query/models"
 	"github.com/m3db/m3/src/query/storage"
 	"github.com/m3db/m3/src/query/ts"

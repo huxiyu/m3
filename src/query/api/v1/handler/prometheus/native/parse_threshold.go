@@ -23,9 +23,8 @@ package native
 import (
 	"net/http"
 
-	"github.com/m3db/m3/src/query/api/v1/options"
-
 	"github.com/m3db/m3/src/query/api/v1/handler"
+	"github.com/m3db/m3/src/query/api/v1/options"
 	"github.com/m3db/m3/src/query/functions/scalar"
 	"github.com/m3db/m3/src/x/instrument"
 	xhttp "github.com/m3db/m3/src/x/net/http"

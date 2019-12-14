@@ -219,6 +219,7 @@ func NewHandlerOptions(
 		cpuProfileDuration:    cpuProfileDuration,
 		placementServiceNames: placementServiceNames,
 		serviceOptionDefaults: serviceOptionDefaults,
+		nowFn:                 time.Now,
 	}, nil
 }
 

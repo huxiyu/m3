@@ -31,8 +31,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/m3db/m3/src/query/api/v1/options"
-
 	clusterclient "github.com/m3db/m3/src/cluster/client"
 	etcdclient "github.com/m3db/m3/src/cluster/client/etcd"
 	"github.com/m3db/m3/src/cmd/services/m3coordinator/downsample"
@@ -45,6 +43,7 @@ import (
 	"github.com/m3db/m3/src/metrics/policy"
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/handleroptions"
 	"github.com/m3db/m3/src/query/api/v1/httpd"
+	"github.com/m3db/m3/src/query/api/v1/options"
 	m3dbcluster "github.com/m3db/m3/src/query/cluster/m3db"
 	"github.com/m3db/m3/src/query/executor"
 	"github.com/m3db/m3/src/query/models"

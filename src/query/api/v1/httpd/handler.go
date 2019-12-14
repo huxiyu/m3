@@ -27,10 +27,6 @@ import (
 	_ "net/http/pprof" // needed for pprof handler registration
 	"time"
 
-	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/handleroptions"
-
-	"github.com/m3db/m3/src/query/api/v1/options"
-
 	"github.com/m3db/m3/src/query/api/experimental/annotated"
 	"github.com/m3db/m3/src/query/api/v1/handler"
 	"github.com/m3db/m3/src/query/api/v1/handler/database"
@@ -39,9 +35,11 @@ import (
 	"github.com/m3db/m3/src/query/api/v1/handler/namespace"
 	"github.com/m3db/m3/src/query/api/v1/handler/openapi"
 	"github.com/m3db/m3/src/query/api/v1/handler/placement"
+	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/handleroptions"
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/native"
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/remote"
 	"github.com/m3db/m3/src/query/api/v1/handler/topic"
+	"github.com/m3db/m3/src/query/api/v1/options"
 	"github.com/m3db/m3/src/query/util/logging"
 	xdebug "github.com/m3db/m3/src/x/debug"
 	xhttp "github.com/m3db/m3/src/x/net/http"
