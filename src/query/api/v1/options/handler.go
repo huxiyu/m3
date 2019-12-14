@@ -46,6 +46,8 @@ const defaultTimeout = 30 * time.Second
 type CustomHandler interface {
 	// Route is the custom handler route.
 	Route() string
+	// Methods is the list of http methods this handler services.
+	Methods() []string
 	// Handler is the custom handler itself.
 	Handler(handlerOptions HandlerOptions) (http.Handler, error)
 }

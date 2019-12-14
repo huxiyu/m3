@@ -120,6 +120,9 @@ type RunOptions struct {
 	// ListenerCh is a programmatic channel to receive the server listener
 	// on once it has opened.
 	ListenerCh chan<- net.Listener
+
+	// CustomHandlers is a list of custom 3rd party handlers.
+	CustomHandlers []options.CustomHandler
 }
 
 // Run runs the server programmatically given a filename for the configuration file.
@@ -309,7 +312,7 @@ func Run(runOpts RunOptions) {
 		logger.Fatal("unable to set up handler options", zap.Error(err))
 	}
 
-	handler := httpd.NewHandler(handlerOptions)
+	handler := httpd.NewHandler(handlerOptions, runOpts.CustomHandlers...)
 	if err := handler.RegisterRoutes(); err != nil {
 		logger.Fatal("unable to register routes", zap.Error(err))
 	}

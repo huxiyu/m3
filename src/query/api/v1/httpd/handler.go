@@ -275,6 +275,17 @@ func (h *Handler) RegisterRoutes() error {
 		}
 	}
 
+	// Register custom endpoints.
+	for _, custom := range h.customHandlers {
+		handler, err := custom.Handler(h.options)
+		if err != nil {
+			return err
+		}
+
+		h.router.HandleFunc(custom.Route(), handler.ServeHTTP).
+			Methods(custom.Methods()...)
+	}
+
 	h.registerHealthEndpoints()
 	h.registerProfileEndpoints()
 	h.registerRoutesEndpoint()
@@ -314,7 +325,7 @@ func (h *Handler) m3AggServiceOptions() *handleroptions.M3AggServiceOptions {
 	}
 }
 
-// Endpoints useful for profiling the service
+// Endpoints useful for profiling the service.
 func (h *Handler) registerHealthEndpoints() {
 	h.router.HandleFunc(healthURL, func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(struct {
@@ -325,12 +336,12 @@ func (h *Handler) registerHealthEndpoints() {
 	}).Methods(http.MethodGet)
 }
 
-// Endpoints useful for profiling the service
+// Endpoints useful for profiling the service.
 func (h *Handler) registerProfileEndpoints() {
 	h.router.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
 }
 
-// Endpoints useful for viewing routes directory
+// Endpoints useful for viewing routes directory.
 func (h *Handler) registerRoutesEndpoint() {
 	h.router.HandleFunc(routesURL, func(w http.ResponseWriter, r *http.Request) {
 		var routes []string

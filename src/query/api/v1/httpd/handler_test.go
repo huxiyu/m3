@@ -84,7 +84,10 @@ func newEngine(
 	return executor.NewEngine(engineOpts)
 }
 
-func setupHandler(store storage.Storage) (*Handler, error) {
+func setupHandler(
+	store storage.Storage,
+	customHandlers ...options.CustomHandler,
+) (*Handler, error) {
 	instrumentOpts := instrument.NewOptions()
 	downsamplerAndWriter := ingest.NewDownsamplerAndWriter(store, nil, testWorkerPool)
 	engine := newEngine(store, time.Minute, nil, instrumentOpts)
@@ -109,7 +112,7 @@ func setupHandler(store storage.Storage) (*Handler, error) {
 		return nil, err
 	}
 
-	return NewHandler(opts), nil
+	return NewHandler(opts, customHandlers...), nil
 }
 
 func TestHandlerFetchTimeoutError(t *testing.T) {
@@ -365,4 +368,47 @@ func init() {
 	}
 
 	testWorkerPool.Init()
+}
+
+type customHandler struct {
+	t *testing.T
+}
+
+func (h *customHandler) Route() string     { return "/custom" }
+func (h *customHandler) Methods() []string { return []string{http.MethodGet} }
+func (h *customHandler) Handler(
+	opts options.HandlerOptions,
+) (http.Handler, error) {
+	assert.Equal(h.t, "z", string(opts.TagOptions().MetricName()))
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("success!"))
+	}
+
+	return http.HandlerFunc(fn), nil
+}
+
+func TestCustomRoutes(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/custom", nil)
+	res := httptest.NewRecorder()
+	ctrl := gomock.NewController(t)
+	store, _ := m3.NewStorageAndSession(t, ctrl)
+	instrumentOpts := instrument.NewOptions()
+	downsamplerAndWriter := ingest.NewDownsamplerAndWriter(store, nil, testWorkerPool)
+	engine := newEngine(store, time.Minute, nil, instrumentOpts)
+	opts, err := options.NewHandlerOptions(
+		downsamplerAndWriter, makeTagOptions().SetMetricName([]byte("z")), engine, nil, nil,
+		config.Configuration{LookbackDuration: &defaultLookbackDuration}, nil, nil,
+		handleroptions.NewFetchOptionsBuilder(handleroptions.FetchOptionsBuilderOptions{}),
+		models.QueryContextOptions{}, instrumentOpts, defaultCPUProfileduration,
+		defaultPlacementServices, svcDefaultOptions,
+	)
+
+	require.NoError(t, err)
+	custom := &customHandler{t: t}
+	handler := NewHandler(opts, custom)
+	require.NoError(t, err, "unable to setup handler")
+	err = handler.RegisterRoutes()
+	require.NoError(t, err, "unable to register routes")
+	handler.Router().ServeHTTP(res, req)
+	require.Equal(t, res.Code, http.StatusOK)
 }
