@@ -42,11 +42,6 @@ const (
 	// of propagating aggregator placement to clients, usually needed when there is
 	// a large amount of clients sending traffic to m3aggregator.
 	defaultM3AggWarmupDuration = 0
-
-	// DefaultServiceEnvironment is the default service ID environment.
-	DefaultServiceEnvironment = "default_env"
-	// DefaultServiceZone is the default service ID zone.
-	DefaultServiceZone = "embedded"
 )
 
 var (

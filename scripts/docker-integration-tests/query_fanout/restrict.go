@@ -29,8 +29,8 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/m3db/m3/src/query/api/v1/handler"
 	"github.com/m3db/m3/src/query/api/v1/handler/prometheus"
+	"github.com/m3db/m3/src/query/api/v1/handler/prometheus/handleroptions"
 	"github.com/m3db/m3/src/query/models"
 
 	"github.com/stretchr/testify/require"
@@ -85,7 +85,7 @@ func queryWithHeader(url string, h string) (prometheus.Response, error) {
 		return result, err
 	}
 
-	req.Header.Add(handler.RestrictByTagsJSONHeader, h)
+	req.Header.Add(handleroptions.RestrictByTagsJSONHeader, h)
 	client := http.DefaultClient
 	resp, err := client.Do(req)
 	if err != nil {
@@ -115,16 +115,16 @@ func mustMatcher(t models.MatchType, n string, v string) models.Matcher {
 	return m
 }
 
-func mustParseOpts(o handler.StringTagOptions) string {
+func mustParseOpts(o handleroptions.StringTagOptions) string {
 	m, err := json.Marshal(o)
 	require.NoError(t, err, "cannot marshal to json")
 	return string(m)
 }
 
 func bothClusterDefaultStrip(url string) {
-	m := mustParseOpts(handler.StringTagOptions{
-		Restrict: []handler.StringMatch{
-			handler.StringMatch{Name: "val", Type: "EQUAL", Value: "1"},
+	m := mustParseOpts(handleroptions.StringTagOptions{
+		Restrict: []handleroptions.StringMatch{
+			handleroptions.StringMatch{Name: "val", Type: "EQUAL", Value: "1"},
 		},
 	})
 
@@ -142,9 +142,9 @@ func bothClusterDefaultStrip(url string) {
 }
 
 func bothClusterCustomStrip(url string) {
-	m := mustParseOpts(handler.StringTagOptions{
-		Restrict: []handler.StringMatch{
-			handler.StringMatch{Name: "val", Type: "EQUAL", Value: "1"},
+	m := mustParseOpts(handleroptions.StringTagOptions{
+		Restrict: []handleroptions.StringMatch{
+			handleroptions.StringMatch{Name: "val", Type: "EQUAL", Value: "1"},
 		},
 		Strip: []string{"__name__"},
 	})
@@ -163,9 +163,9 @@ func bothClusterCustomStrip(url string) {
 }
 
 func bothClusterNoStrip(url string) {
-	m := mustParseOpts(handler.StringTagOptions{
-		Restrict: []handler.StringMatch{
-			handler.StringMatch{Name: "val", Type: "EQUAL", Value: "1"},
+	m := mustParseOpts(handleroptions.StringTagOptions{
+		Restrict: []handleroptions.StringMatch{
+			handleroptions.StringMatch{Name: "val", Type: "EQUAL", Value: "1"},
 		},
 		Strip: []string{},
 	})
@@ -185,9 +185,9 @@ func bothClusterNoStrip(url string) {
 }
 
 func bothClusterMultiStrip(url string) {
-	m := mustParseOpts(handler.StringTagOptions{
-		Restrict: []handler.StringMatch{
-			handler.StringMatch{Name: "val", Type: "EQUAL", Value: "1"},
+	m := mustParseOpts(handleroptions.StringTagOptions{
+		Restrict: []handleroptions.StringMatch{
+			handleroptions.StringMatch{Name: "val", Type: "EQUAL", Value: "1"},
 		},
 		Strip: []string{"val", "__name__"},
 	})
@@ -208,9 +208,9 @@ func bothClusterMultiStrip(url string) {
 // and cluster 2 is expected to have metrics with vals in range: [1,10]
 // so setting the value to be in (5..10] should hit only a single metric.
 func singleClusterDefaultStrip(url string) {
-	m := mustParseOpts(handler.StringTagOptions{
-		Restrict: []handler.StringMatch{
-			handler.StringMatch{Name: "val", Type: "EQUAL", Value: "9"},
+	m := mustParseOpts(handleroptions.StringTagOptions{
+		Restrict: []handleroptions.StringMatch{
+			handleroptions.StringMatch{Name: "val", Type: "EQUAL", Value: "9"},
 		},
 	})
 

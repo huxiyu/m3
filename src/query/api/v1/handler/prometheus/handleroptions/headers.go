@@ -43,6 +43,11 @@ const (
 	// UnaggregatedStoragePolicy specifies the unaggregated storage policy.
 	UnaggregatedStoragePolicy = "unaggregated"
 
+	// DefaultServiceEnvironment is the default service ID environment.
+	DefaultServiceEnvironment = "default_env"
+	// DefaultServiceZone is the default service ID zone.
+	DefaultServiceZone = "embedded"
+
 	// HeaderClusterEnvironmentName is the header used to specify the environment
 	// name.
 	HeaderClusterEnvironmentName = "Cluster-Environment-Name"
