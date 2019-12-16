@@ -26,7 +26,6 @@ import (
 	qcost "github.com/m3db/m3/src/query/cost"
 	"github.com/m3db/m3/src/query/parser/promql"
 	"github.com/m3db/m3/src/query/storage"
-
 	"github.com/m3db/m3/src/x/instrument"
 )
 

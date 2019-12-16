@@ -40,6 +40,26 @@ const (
 	// DeprecatedHeader is the M3 deprecated header.
 	DeprecatedHeader = "M3-Deprecated"
 
+	// MetricsTypeHeader sets the write or read metrics type to restrict
+	// metrics to.
+	// Valid values are "unaggregated" or "aggregated".
+	MetricsTypeHeader = "M3-Metrics-Type"
+
+	// MetricsStoragePolicyHeader specifies the resolution and retention of
+	// metrics being written or read.
+	// In the form of a storage policy string, e.g. "1m:14d".
+	// Only required if the metrics type header does not specify unaggregated
+	// metrics type.
+	MetricsStoragePolicyHeader = "M3-Storage-Policy"
+
+	// RestrictByTagsJSONHeader provides tag options to enforces on queries,
+	// in JSON format. See `handler.stringTagOptions` for definitions.`
+	RestrictByTagsJSONHeader = "M3-Restrict-By-Tags-JSON"
+
+	// LimitMaxSeriesHeader is the M3 limit timeseries header that limits
+	// the number of time series returned by each storage node.
+	LimitMaxSeriesHeader = "M3-Limit-Max-Series"
+
 	// UnaggregatedStoragePolicy specifies the unaggregated storage policy.
 	UnaggregatedStoragePolicy = "unaggregated"
 
