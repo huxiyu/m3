@@ -28,6 +28,7 @@ import (
 
 	"github.com/m3db/m3/src/query/api/v1/handler"
 	"github.com/m3db/m3/src/query/api/v1/options"
+	"github.com/m3db/m3/src/query/executor"
 	"github.com/m3db/m3/src/query/models"
 	"github.com/m3db/m3/src/query/parser"
 	"github.com/m3db/m3/src/query/parser/promql"
@@ -48,12 +49,14 @@ const (
 
 // PromParseHandler represents a handler for prometheus parse endpoint.
 type promParseHandler struct {
+	engine         executor.Engine
 	instrumentOpts instrument.Options
 }
 
 // NewPromParseHandler returns a new instance of handler.
 func NewPromParseHandler(opts options.HandlerOptions) http.Handler {
 	return &promParseHandler{
+		engine:         opts.Engine(),
 		instrumentOpts: opts.InstrumentOpts(),
 	}
 }
@@ -149,6 +152,7 @@ func constructNodeMap(nodes parser.Nodes, edges parser.Edges) (nodeMap, error) {
 
 func parseRootNode(
 	r *http.Request,
+	engine executor.Engine,
 	logger *zap.Logger,
 ) (FunctionNode, error) {
 	query, err := parseQuery(r)
@@ -157,7 +161,9 @@ func parseRootNode(
 		return FunctionNode{}, err
 	}
 
-	parser, err := promql.Parse(query, time.Second, models.NewTagOptions())
+	parseOpts := engine.Options().ParseOptions()
+	parser, err := promql.Parse(query, time.Second,
+		models.NewTagOptions(), parseOpts)
 	if err != nil {
 		logger.Error("cannot parse query PromQL", zap.Error(err))
 		return FunctionNode{}, err
@@ -186,7 +192,7 @@ func parseRootNode(
 
 func (h *promParseHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	logger := h.instrumentOpts.Logger()
-	root, err := parseRootNode(r, logger)
+	root, err := parseRootNode(r, h.engine, logger)
 	if err != nil {
 		xhttp.Error(w, err, http.StatusBadRequest)
 		return
