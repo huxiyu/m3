@@ -47,6 +47,7 @@ import (
 	m3dbcluster "github.com/m3db/m3/src/query/cluster/m3db"
 	"github.com/m3db/m3/src/query/executor"
 	"github.com/m3db/m3/src/query/models"
+	"github.com/m3db/m3/src/query/parser/promql"
 	"github.com/m3db/m3/src/query/policy/filter"
 	"github.com/m3db/m3/src/query/pools"
 	tsdbRemote "github.com/m3db/m3/src/query/remote"
@@ -123,6 +124,9 @@ type RunOptions struct {
 
 	// CustomHandlers is a list of custom 3rd party handlers.
 	CustomHandlers []options.CustomHandler
+
+	// CustomParseFunction is a custom parsing function.
+	CustomParseFunction promql.ParseFn
 }
 
 // Run runs the server programmatically given a filename for the configuration file.
@@ -282,6 +286,11 @@ func Run(runOpts RunOptions) {
 		SetGlobalEnforcer(perQueryEnforcer).
 		SetInstrumentOptions(instrumentOptions.
 			SetMetricsScope(instrumentOptions.MetricsScope().SubScope("engine")))
+	if fn := runOpts.CustomParseFunction; fn != nil {
+		engineOpts = engineOpts.
+			SetParseOptions(engineOpts.ParseOptions().SetParseFn(fn))
+	}
+
 	engine := executor.NewEngine(engineOpts)
 	downsamplerAndWriter, err := newDownsamplerAndWriter(backendStorage, downsampler)
 	if err != nil {
