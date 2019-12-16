@@ -377,6 +377,17 @@ type Options interface {
 	// SetIsMirrored sets IsMirrored.
 	SetIsMirrored(m bool) Options
 
+	// MirroredGrouper works with IsMirrored, defining the strategy for grouping instances
+	// into mirrored groups (N.B.: often, leader/follower pairs). That is, given a list of instances,
+	// the MirroredGrouper groups them into lists of mirrored nodes, each of which will own the
+	// same shardset and receive the same traffic. This option has no effect if
+	// IsMirrored() == false.
+	//
+	// If not provided, the default strategy is provided by NewHostPortMirroredGrouper.
+	MirroredGrouper() MirroredGrouper
+
+	SetMirroredGrouper(mg MirroredGrouper) Options
+
 	// IsStaged returns whether the placement should keep all the snapshots.
 	IsStaged() bool
 
@@ -592,4 +603,39 @@ type DeploymentOptions interface {
 	// MaxStepSize limits the number of instances to be deployed in one step
 	MaxStepSize() int
 	SetMaxStepSize(stepSize int) DeploymentOptions
+}
+
+// MirroredGrouper allows customization of the grouping of instances into groups of size RF,
+// each of which will own a shardset.
+type MirroredGrouper interface {
+	// GroupAddingInstances is called on placement.Service#AddInstances
+	// to place the adding instances into groups of size RF.
+	// If there are more candidates in a group than p.ReplicaFactor(), groupers should
+	// limit themselves to using only RF candidates, dropping the others.
+	GroupAddingInstances(
+		candidates []Instance,
+		p Placement) ([][]Instance, error)
+
+	// GroupInitialInstances is called on placement.Service#BuildInitialPlacement
+	// to place the instances into groups of size RF.
+	// If there are more candidates in a group than p.ReplicaFactor(), groupers should
+	// limit themselves to using only RF candidates, dropping the others.
+	GroupInitialInstances(
+		candidates []Instance,
+		rf int) ([][]Instance, error)
+
+	// GroupInstancesWithReplacements is called on placement.ReplaceInstances to find instances
+	// in candidates which are groupable with the leavingInstances. It is an error if a leavingInstance
+	// doesn't have an applicable replacement in
+	GroupInstancesWithReplacements(
+		candidates []Instance,
+		leavingInstances []Instance,
+		p Placement) ([]MirroredReplacementGroup, error)
+}
+
+// MirroredReplacementGroup is a pair mapping a leaving instance to its replacement in the same
+// group as defined by a MirroredGrouper.
+type MirroredReplacementGroup struct {
+	Leaving     Instance
+	Replacement Instance
 }

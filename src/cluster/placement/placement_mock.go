@@ -1582,6 +1582,34 @@ func (mr *MockOptionsMockRecorder) SetIsMirrored(m interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetIsMirrored", reflect.TypeOf((*MockOptions)(nil).SetIsMirrored), m)
 }
 
+// MirroredGrouper mocks base method
+func (m *MockOptions) MirroredGrouper() MirroredGrouper {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MirroredGrouper")
+	ret0, _ := ret[0].(MirroredGrouper)
+	return ret0
+}
+
+// MirroredGrouper indicates an expected call of MirroredGrouper
+func (mr *MockOptionsMockRecorder) MirroredGrouper() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MirroredGrouper", reflect.TypeOf((*MockOptions)(nil).MirroredGrouper))
+}
+
+// SetMirroredGrouper mocks base method
+func (m *MockOptions) SetMirroredGrouper(mg MirroredGrouper) Options {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetMirroredGrouper", mg)
+	ret0, _ := ret[0].(Options)
+	return ret0
+}
+
+// SetMirroredGrouper indicates an expected call of SetMirroredGrouper
+func (mr *MockOptionsMockRecorder) SetMirroredGrouper(mg interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMirroredGrouper", reflect.TypeOf((*MockOptions)(nil).SetMirroredGrouper), mg)
+}
+
 // IsStaged mocks base method
 func (m *MockOptions) IsStaged() bool {
 	m.ctrl.T.Helper()
@@ -2637,4 +2665,72 @@ func (m *MockDeploymentOptions) SetMaxStepSize(stepSize int) DeploymentOptions {
 func (mr *MockDeploymentOptionsMockRecorder) SetMaxStepSize(stepSize interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetMaxStepSize", reflect.TypeOf((*MockDeploymentOptions)(nil).SetMaxStepSize), stepSize)
+}
+
+// MockMirroredGrouper is a mock of MirroredGrouper interface
+type MockMirroredGrouper struct {
+	ctrl     *gomock.Controller
+	recorder *MockMirroredGrouperMockRecorder
+}
+
+// MockMirroredGrouperMockRecorder is the mock recorder for MockMirroredGrouper
+type MockMirroredGrouperMockRecorder struct {
+	mock *MockMirroredGrouper
+}
+
+// NewMockMirroredGrouper creates a new mock instance
+func NewMockMirroredGrouper(ctrl *gomock.Controller) *MockMirroredGrouper {
+	mock := &MockMirroredGrouper{ctrl: ctrl}
+	mock.recorder = &MockMirroredGrouperMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use
+func (m *MockMirroredGrouper) EXPECT() *MockMirroredGrouperMockRecorder {
+	return m.recorder
+}
+
+// GroupAddingInstances mocks base method
+func (m *MockMirroredGrouper) GroupAddingInstances(candidates []Instance, p Placement) ([][]Instance, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GroupAddingInstances", candidates, p)
+	ret0, _ := ret[0].([][]Instance)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GroupAddingInstances indicates an expected call of GroupAddingInstances
+func (mr *MockMirroredGrouperMockRecorder) GroupAddingInstances(candidates, p interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GroupAddingInstances", reflect.TypeOf((*MockMirroredGrouper)(nil).GroupAddingInstances), candidates, p)
+}
+
+// GroupInitialInstances mocks base method
+func (m *MockMirroredGrouper) GroupInitialInstances(candidates []Instance, rf int) ([][]Instance, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GroupInitialInstances", candidates, rf)
+	ret0, _ := ret[0].([][]Instance)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GroupInitialInstances indicates an expected call of GroupInitialInstances
+func (mr *MockMirroredGrouperMockRecorder) GroupInitialInstances(candidates, rf interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GroupInitialInstances", reflect.TypeOf((*MockMirroredGrouper)(nil).GroupInitialInstances), candidates, rf)
+}
+
+// GroupInstancesWithReplacements mocks base method
+func (m *MockMirroredGrouper) GroupInstancesWithReplacements(candidates, leavingInstances []Instance, p Placement) ([]MirroredReplacementGroup, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GroupInstancesWithReplacements", candidates, leavingInstances, p)
+	ret0, _ := ret[0].([]MirroredReplacementGroup)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GroupInstancesWithReplacements indicates an expected call of GroupInstancesWithReplacements
+func (mr *MockMirroredGrouperMockRecorder) GroupInstancesWithReplacements(candidates, leavingInstances, p interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GroupInstancesWithReplacements", reflect.TypeOf((*MockMirroredGrouper)(nil).GroupInstancesWithReplacements), candidates, leavingInstances, p)
 }

@@ -70,6 +70,7 @@ type options struct {
 	isShardCutoffFn     ShardValidateFn
 	validateFn          ValidateFn
 	nowFn               clock.NowFn
+	mirroredGrouper     MirroredGrouper
 	allowPartialReplace bool
 	allowAllZones       bool
 	addAllCandidates    bool
@@ -148,6 +149,15 @@ func (o options) IsMirrored() bool {
 
 func (o options) SetIsMirrored(v bool) Options {
 	o.isMirrored = v
+	return o
+}
+
+func (o options) MirroredGrouper() MirroredGrouper {
+	return o.mirroredGrouper
+}
+
+func (o options) SetMirroredGrouper(mg MirroredGrouper) Options {
+	o.mirroredGrouper = mg
 	return o
 }
 
