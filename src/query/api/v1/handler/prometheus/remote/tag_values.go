@@ -132,9 +132,8 @@ func (h *TagValuesHandler) parseTagValuesToQuery(
 		FilterNameTags:   [][]byte{nameBytes},
 		TagMatchers: models.Matchers{
 			models.Matcher{
-				Type:  models.MatchRegexp,
-				Name:  nameBytes,
-				Value: matchValues,
+				Type: models.MatchField,
+				Name: nameBytes,
 			},
 		},
 	}, nil

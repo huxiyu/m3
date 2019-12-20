@@ -74,9 +74,8 @@ func (m *tagValuesMatcher) Matches(x interface{}) bool {
 	}
 
 	tm := q.TagMatchers[0]
-	return models.MatchRegexp == tm.Type &&
-		bytes.Equal([]byte(m.filterTag), tm.Name) &&
-		bytes.Equal(matchValues, tm.Value)
+	return models.MatchField == tm.Type &&
+		bytes.Equal([]byte(m.filterTag), tm.Name)
 }
 
 var _ gomock.Matcher = &tagValuesMatcher{}
