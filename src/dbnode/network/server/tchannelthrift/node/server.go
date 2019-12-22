@@ -63,7 +63,8 @@ func (s *server) ListenAndServe() (ns.Close, error) {
 		return nil, err
 	}
 
-	tchannelthrift.RegisterServer(channel, rpc.NewTChanNodeServer(s.service), s.contextPool)
+	tchannelthrift.RegisterServer(channel,
+		rpc.NewSnappyTChanNodeServer(s.service), s.contextPool)
 
 	channel.ListenAndServe(s.address)
 

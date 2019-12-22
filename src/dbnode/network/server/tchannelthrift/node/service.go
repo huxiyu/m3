@@ -293,6 +293,9 @@ func NewService(db storage.Database, opts tchannelthrift.Options) Service {
 				Ok:           true,
 				Status:       "up",
 				Bootstrapped: false,
+				ServerMetadata: &rpc.ServerMetadata{
+					SupportsCompressSnappy: true,
+				},
 			},
 			maxOutstandingWriteRPCs: opts.MaxOutstandingWriteRequests(),
 			maxOutstandingReadRPCs:  opts.MaxOutstandingReadRequests(),

@@ -73,9 +73,16 @@ type conn struct {
 	client  rpc.TChanNode
 }
 
-type newConnFn func(channelName string, addr string, opts Options) (xclose.SimpleCloser, rpc.TChanNode, error)
+type newConnFn func(
+	channelName string,
+	addr string,
+	opts Options,
+) (xclose.SimpleCloser, thrift.TChanClient, error)
 
-type healthCheckFn func(client rpc.TChanNode, opts Options) error
+type healthCheckFn func(
+	client rpc.TChanNode,
+	opts Options,
+) (*rpc.NodeHealthResult_, error)
 
 type sleepFn func(t time.Duration)
 
@@ -181,17 +188,26 @@ func (p *connPool) connectEvery(interval time.Duration, stutter time.Duration) {
 				defer wg.Done()
 
 				// Create connection
-				channel, client, err := p.newConn(channelName, address, p.opts)
+				channel, thriftClient, err := p.newConn(channelName, address, p.opts)
 				if err != nil {
 					log.Debug("could not connect", zap.String("host", address), zap.Error(err))
 					return
 				}
 
+				client := rpc.NewTChanNodeClient(thriftClient)
+
 				// Health check the connection
-				if err := p.healthCheckNewConn(client, p.opts); err != nil {
+				result, err := p.healthCheckNewConn(client, p.opts)
+				if err != nil {
 					log.Debug("could not connect, failed health check", zap.String("host", address), zap.Error(err))
 					channel.Close()
 					return
+				}
+
+				if m := result.ServerMetadata; m != nil && m.SupportsCompressSnappy {
+					// If supports snappy compression, then read and write snappy
+					// messages to the server.
+					client = rpc.NewTChanNodeClient(rpc.NewSnappyTChanClient(thriftClient))
 				}
 
 				p.Lock()
@@ -239,7 +255,7 @@ func (p *connPool) healthCheckEvery(interval time.Duration, stutter time.Duratio
 					checkErr error
 				)
 				for j := 0; j < attempts; j++ {
-					if err := p.healthCheck(client, p.opts); err != nil {
+					if _, err := p.healthCheck(client, p.opts); err != nil {
 						checkErr = err
 						failed++
 						throttleDuration := time.Duration(math.Max(
@@ -296,27 +312,30 @@ func (p *connPool) healthCheckEvery(interval time.Duration, stutter time.Duratio
 	}
 }
 
-func newConn(channelName string, address string, opts Options) (xclose.SimpleCloser, rpc.TChanNode, error) {
+func newConn(channelName string, address string, opts Options) (
+	xclose.SimpleCloser,
+	thrift.TChanClient,
+	error,
+) {
 	channel, err := tchannel.NewChannel(channelName, opts.ChannelOptions())
 	if err != nil {
 		return nil, nil, err
 	}
 	endpoint := &thrift.ClientOptions{HostPort: address}
 	thriftClient := thrift.NewClient(channel, nchannel.ChannelName, endpoint)
-	client := rpc.NewTChanNodeClient(thriftClient)
-	return channel, client, nil
+	return channel, thriftClient, nil
 }
 
-func healthCheck(client rpc.TChanNode, opts Options) error {
+func healthCheck(client rpc.TChanNode, opts Options) (*rpc.NodeHealthResult_, error) {
 	tctx, _ := thrift.NewContext(opts.HostConnectTimeout())
 	result, err := client.Health(tctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if !result.Ok {
-		return fmt.Errorf("status not ok: %s", result.Status)
+		return nil, fmt.Errorf("status not ok: %s", result.Status)
 	}
-	return nil
+	return result, nil
 }
 
 func randStutter(source rand.Source, t time.Duration) time.Duration {
