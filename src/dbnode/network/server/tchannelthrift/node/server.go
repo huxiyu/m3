@@ -63,10 +63,17 @@ func (s *server) ListenAndServe() (ns.Close, error) {
 		return nil, err
 	}
 
-	tchannelthrift.RegisterServer(channel,
-		rpc.NewSnappyTChanNodeServer(s.service), s.contextPool)
+	// Use compressed server.
+	s.service.SetSupportsSnappyCompression(true)
+	server := rpc.NewSnappyTChanNodeServer(s.service)
 
-	channel.ListenAndServe(s.address)
+	// Register the server with the channel.
+	tchannelthrift.RegisterServer(channel, server, s.contextPool)
+
+	// Begin serving the channel.
+	if err := channel.ListenAndServe(s.address); err != nil {
+		return nil, err
+	}
 
 	return channel.Close, nil
 }

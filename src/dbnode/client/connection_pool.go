@@ -60,6 +60,7 @@ type connPool struct {
 	connectRand        rand.Source
 	healthCheckRand    rand.Source
 	newConn            newConnFn
+	newConnClient      newConnClientFn
 	healthCheckNewConn healthCheckFn
 	healthCheck        healthCheckFn
 	sleepConnect       sleepFn
@@ -86,8 +87,13 @@ type healthCheckFn func(
 
 type sleepFn func(t time.Duration)
 
+type newConnClientFn func(c thrift.TChanClient) rpc.TChanNode
+
 // Allow for test override
-var globalNewConn = newConn
+var (
+	globalNewConn       = newConn
+	globalNewConnClient = newConnClient
+)
 
 func newConnectionPool(host topology.Host, opts Options) connectionPool {
 	seed := int64(murmur3.Sum32([]byte(host.Address())))
@@ -100,6 +106,7 @@ func newConnectionPool(host topology.Host, opts Options) connectionPool {
 		connectRand:        rand.NewSource(seed),
 		healthCheckRand:    rand.NewSource(seed + 1),
 		newConn:            globalNewConn,
+		newConnClient:      globalNewConnClient,
 		healthCheckNewConn: healthCheck,
 		healthCheck:        healthCheck,
 		sleepConnect:       time.Sleep,
@@ -194,7 +201,7 @@ func (p *connPool) connectEvery(interval time.Duration, stutter time.Duration) {
 					return
 				}
 
-				client := rpc.NewTChanNodeClient(thriftClient)
+				client := p.newConnClient(thriftClient)
 
 				// Health check the connection
 				result, err := p.healthCheckNewConn(client, p.opts)
@@ -207,7 +214,7 @@ func (p *connPool) connectEvery(interval time.Duration, stutter time.Duration) {
 				if m := result.ServerMetadata; m != nil && m.SupportsCompressSnappy {
 					// If supports snappy compression, then read and write snappy
 					// messages to the server.
-					client = rpc.NewTChanNodeClient(rpc.NewSnappyTChanClient(thriftClient))
+					client = p.newConnClient(rpc.NewSnappyTChanClient(thriftClient))
 				}
 
 				p.Lock()
@@ -324,6 +331,10 @@ func newConn(channelName string, address string, opts Options) (
 	endpoint := &thrift.ClientOptions{HostPort: address}
 	thriftClient := thrift.NewClient(channel, nchannel.ChannelName, endpoint)
 	return channel, thriftClient, nil
+}
+
+func newConnClient(client thrift.TChanClient) rpc.TChanNode {
+	return rpc.NewTChanNodeClient(client)
 }
 
 func healthCheck(client rpc.TChanNode, opts Options) (*rpc.NodeHealthResult_, error) {
