@@ -176,57 +176,8 @@ func TestConnectionPoolHealthChecks(t *testing.T) {
 		invokeFail     int32
 		client1        rpc.TChanNode
 		client2        rpc.TChanNode
-		overrides      = []healthCheckFn{}
-		overridesMut   sync.RWMutex
-		pushOverride   = func(fn healthCheckFn, count int) {
-			overridesMut.Lock()
-			defer overridesMut.Unlock()
-			for i := 0; i < count; i++ {
-				overrides = append(overrides, fn)
-			}
-		}
-		popOverride = func() healthCheckFn {
-			overridesMut.Lock()
-			defer overridesMut.Unlock()
-			if len(overrides) == 0 {
-				return nil
-			}
-			next := overrides[0]
-			overrides = overrides[1:]
-			return next
-		}
-		pushFailClientOverride = func(failTargetClient rpc.TChanNode) {
-			var failOverride healthCheckFn
-			failOverride = func(client rpc.TChanNode, opts Options) (*rpc.NodeHealthResult_, error) {
-				if client == failTargetClient {
-					atomic.AddInt32(&invokeFail, 1)
-					return nil, fmt.Errorf("fail client")
-				}
-				// Not failing this client, re-enqueue
-				pushOverride(failOverride, 1)
-				return &rpc.NodeHealthResult_{}, nil
-			}
-			pushOverride(failOverride, healthCheckFailLimit)
-		}
-		onNextSleepHealth     []func()
-		onNextSleepHealthMut  sync.RWMutex
-		pushOnNextSleepHealth = func(fn func()) {
-			onNextSleepHealthMut.Lock()
-			defer onNextSleepHealthMut.Unlock()
-			onNextSleepHealth = append(onNextSleepHealth, fn)
-		}
-		popOnNextSleepHealth = func() func() {
-			onNextSleepHealthMut.Lock()
-			defer onNextSleepHealthMut.Unlock()
-			if len(onNextSleepHealth) == 0 {
-				return nil
-			}
-			next := onNextSleepHealth[0]
-			onNextSleepHealth = onNextSleepHealth[1:]
-			return next
-		}
-		failsDoneWg [2]sync.WaitGroup
-		failsDone   [2]int32
+		failsDoneWg    [2]sync.WaitGroup
+		failsDone      [2]int32
 	)
 	for i := range failsDoneWg {
 		failsDoneWg[i].Add(1)
@@ -240,7 +191,10 @@ func TestConnectionPoolHealthChecks(t *testing.T) {
 		}
 		return nil, nil, fmt.Errorf("spawning only 2 connections")
 	}
+	var healthCheckLock sync.Mutex
 	conns.healthCheckNewConn = func(client rpc.TChanNode, opts Options) (*rpc.NodeHealthResult_, error) {
+		healthCheckLock.Lock()
+		defer healthCheckLock.Unlock()
 		if client1 == nil {
 			client1 = client
 			return &rpc.NodeHealthResult_{}, nil
@@ -251,11 +205,19 @@ func TestConnectionPoolHealthChecks(t *testing.T) {
 		}
 		return nil, fmt.Errorf("spawning only 2 connections")
 	}
+	var healthCheckFailClient1, healthCheckFailClient2 bool
 	conns.healthCheck = func(client rpc.TChanNode, opts Options) (*rpc.NodeHealthResult_, error) {
-		if fn := popOverride(); fn != nil {
-			return fn(client, opts)
+		healthCheckLock.Lock()
+		defer healthCheckLock.Unlock()
+		if client == client1 && healthCheckFailClient1 {
+			atomic.AddInt32(&invokeFail, 1)
+			return nil, fmt.Errorf("failing client 1")
 		}
-		return nil, nil
+		if client == client2 && healthCheckFailClient2 {
+			atomic.AddInt32(&invokeFail, 1)
+			return nil, fmt.Errorf("failing client 2")
+		}
+		return &rpc.NodeHealthResult_{}, nil
 	}
 	conns.sleepConnect = func(d time.Duration) {
 		atomic.AddInt32(&connectRounds, 1)
@@ -271,9 +233,6 @@ func TestConnectionPoolHealthChecks(t *testing.T) {
 			failsDoneWg[1].Done()
 		}
 		time.Sleep(time.Millisecond)
-		if fn := popOnNextSleepHealth(); fn != nil {
-			fn()
-		}
 	}
 	conns.sleepHealthRetry = func(d time.Duration) {
 		expected := healthCheckFailThrottleFactor * float64(opts.HostConnectTimeout())
@@ -292,9 +251,9 @@ func TestConnectionPoolHealthChecks(t *testing.T) {
 	require.Equal(t, 2, conns.ConnectionCount())
 
 	// Fail client1 health check
-	pushOnNextSleepHealth(func() {
-		pushFailClientOverride(client1)
-	})
+	healthCheckLock.Lock()
+	healthCheckFailClient1 = true
+	healthCheckLock.Unlock()
 
 	// Wait for health check round to take action
 	failsDoneWg[0].Wait()
@@ -311,9 +270,9 @@ func TestConnectionPoolHealthChecks(t *testing.T) {
 	}
 
 	// Fail client2 health check
-	pushOnNextSleepHealth(func() {
-		pushFailClientOverride(client2)
-	})
+	healthCheckLock.Lock()
+	healthCheckFailClient2 = true
+	healthCheckLock.Unlock()
 
 	// Wait for health check round to take action
 	failsDoneWg[1].Wait()
@@ -322,14 +281,12 @@ func TestConnectionPoolHealthChecks(t *testing.T) {
 		// and the connection actually being removed.
 		return conns.ConnectionCount() == 0
 	}, 5*time.Second)
-	nextClient, err := conns.NextClient()
-	require.Nil(t, nextClient)
+	_, err := conns.NextClient()
 	require.Equal(t, errConnectionPoolHasNoConnections, err)
 
 	conns.Close()
 
-	nextClient, err = conns.NextClient()
-	require.Nil(t, nextClient)
+	_, err = conns.NextClient()
 	require.Equal(t, errConnectionPoolClosed, err)
 }
 
