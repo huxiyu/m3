@@ -21,7 +21,6 @@
 package node
 
 import (
-	"github.com/m3db/m3/src/dbnode/generated/thrift/rpc"
 	ns "github.com/m3db/m3/src/dbnode/network/server"
 	"github.com/m3db/m3/src/dbnode/network/server/tchannelthrift"
 	"github.com/m3db/m3/src/dbnode/network/server/tchannelthrift/node/channel"
@@ -65,7 +64,7 @@ func (s *server) ListenAndServe() (ns.Close, error) {
 
 	// Use compressed server.
 	s.service.SetSupportsSnappyCompression(true)
-	server := rpc.NewSnappyTChanNodeServer(s.service)
+	server := tchannelthrift.NewSnappyTChanNodeServer(s.service)
 
 	// Register the server with the channel.
 	tchannelthrift.RegisterServer(channel, server, s.contextPool)

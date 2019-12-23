@@ -1,7 +1,9 @@
-package rpc
+package tchannelthrift
 
 import (
 	"sync"
+
+	"github.com/m3db/m3/src/dbnode/generated/thrift/rpc"
 
 	apachethrift "github.com/apache/thrift/lib/go/thrift"
 	"github.com/uber/tchannel-go/thrift"
@@ -119,15 +121,13 @@ func (s *snappyTStruct) Read(p apachethrift.TProtocol) error {
 }
 
 type snappyTChanNodeServer struct {
-	tchanNodeServer
+	thrift.TChanServer
 }
 
 // NewSnappyTChanNodeServer returns a new snappy TChanNodeServer.
-func NewSnappyTChanNodeServer(handler TChanNode) thrift.TChanServer {
+func NewSnappyTChanNodeServer(handler rpc.TChanNode) thrift.TChanServer {
 	return &snappyTChanNodeServer{
-		tchanNodeServer: tchanNodeServer{
-			handler,
-		},
+		TChanServer: rpc.NewTChanNodeServer(handler),
 	}
 }
 
@@ -153,7 +153,7 @@ func (s *snappyTChanNodeServer) Handle(
 		}
 	}
 
-	result, resp, err := s.tchanNodeServer.Handle(ctx, methodName, protocol)
+	result, resp, err := s.TChanServer.Handle(ctx, methodName, protocol)
 	if err != nil {
 		return result, resp, err
 	}

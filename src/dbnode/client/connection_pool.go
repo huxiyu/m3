@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/m3db/m3/src/dbnode/generated/thrift/rpc"
+	"github.com/m3db/m3/src/dbnode/network/server/tchannelthrift"
 	nchannel "github.com/m3db/m3/src/dbnode/network/server/tchannelthrift/node/channel"
 	"github.com/m3db/m3/src/dbnode/topology"
 	xclose "github.com/m3db/m3/src/x/close"
@@ -214,7 +215,7 @@ func (p *connPool) connectEvery(interval time.Duration, stutter time.Duration) {
 				if m := result.ServerMetadata; m != nil && m.SupportsCompressSnappy {
 					// If supports snappy compression, then read and write snappy
 					// messages to the server.
-					client = p.newConnClient(rpc.NewSnappyTChanClient(thriftClient))
+					client = p.newConnClient(tchannelthrift.NewSnappyTChanClient(thriftClient))
 				}
 
 				p.Lock()
